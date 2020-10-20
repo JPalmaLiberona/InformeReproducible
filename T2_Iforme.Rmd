@@ -9,7 +9,7 @@ urlcolor: blue
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, error = FALSE, message = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, error = FALSE, message = FALSE, fig.pos = "H", out.extra = "")
 options("kableExtra.html.bsTable" = T)
 library(tidyverse)
 library(kableExtra)
@@ -19,14 +19,14 @@ library(broom)
 # Introducción
 
 ```{r}
-energy <- read_csv("all_energy_statistics.csv") 
+energy <- read_csv("https://archive.org/download/all_energy_statistics_20201020/all_energy_statistics.csv") 
   
 
-population <- read_csv2("WorldPopulation.csv", )  
+population <- read_csv2("https://archive.org/download/world-population/WorldPopulation.csv")  
 
 ```
 
-La producción y consumo de energía ha sido y todavía es uno de los principales factores en el desarrollo tecnológico y económico de las sociedades modernas. Es así que múltiples estudios han probado una relación causal bidireccional entre el consumo de combustibles para la producción de energía y el desarrollo económico de las naciones [@asafu2016economic; @mahadevan2007energy] por lo que es claro que la producción de energía elecrica es un dato crucial al momento de caracterizar el desarrollo de las naciones. 
+La producción y consumo de energía ha sido y todavía es uno de los principales factores en el desarrollo tecnológico y económico de las sociedades modernas. Es así que múltiples estudios han probado una relación causal bidireccional entre el consumo de combustibles para la producción de energía y el desarrollo económico de las naciones [@asafu2016economic; @mahadevan2007energy] por lo que es claro que la producción de energía elétcrica es un dato crucial al momento de caracterizar el desarrollo de las naciones. 
 
 Si bien tradicionalmente la generación de energía eléctrica ha sido realizada mediante la combustión de carbón o gas, múltiples tecnologías alternativas se han desarrollado con el pasar de los años, presentando estas alternativas para cubrir las demandas energéticas utilizando métodos que generan un menor nivel de emisiones contaminantes. No obstante, el proceso de recambio de la planta de generación de energía eléctrica de un país es un proceso complejo que se enfrenta a múltiples obstáculos [@brunnschweiler2010finance].
 
@@ -34,9 +34,9 @@ Es en base a lo arriba presentado es que, en el presente estudio, se analizará 
  
 Con este propósito se utilizará una fracción de la base de datos de producción y comercio de energía generada por la [división de estadísticas de las naciones unidas](https://unstats.un.org/home/). la cual se encuentra disponible en el sitio web [kaggle](https://www.kaggle.com/unitednations/international-energy-statistics).
 
-Esta base consiste en `r prettyNum(dim(energy)[1], big.mark = ",")` observaciones las cuales abarcan información de diversa naturaleza respecto a la producción y comercio de energía, así como de los productos involucrados en su generación. No obstante, dado que uno de los principales factores que puede tener un efecto sobre la demanda y, por lo tanto, la producción de energía eléctrica es la población de un país. Se procedió a complementar el set de datos con la población de los países, la cual fue obtenida de la base de datos internacionales del [departamento de censo de los Estados Unidos](https://www.census.gov/programs-surveys/international-programs/about/idb.html).
+Esta base consiste en `r prettyNum(dim(energy)[1], big.mark = ",")` observaciones las cuales abarcan información de diversa naturaleza respecto a la producción y comercio de energía, así como de los productos involucrados en su generación. No obstante, dado que uno de los principales factores que puede tener un efecto sobre la demanda y, por lo tanto, la producción de energía eléctrica es la población de un país. Se procedió a complementar el set de datos con la población de los países, la cual fue obtenida de la base de datos internacionales del [departamento de censo de los Estados Unidos](https://www.census.gov/programs-surveys/international-programs/about/idb.html). Esta segunda base de datos compila los datos de `r dim(population)[1]` países, cubriendo un amplio rango temporal con medidas y proyecciones de tamaños poblacionales.
 
-Esta segunda base de datos compila los datos de `r dim(population)[1]` países, cubriendo un amplio rango temporal con medidas y proyecciones de tamaños poblacionales.
+Se utilizaron estos datos en conjunto para explorar la relación entre tamaño poblacional, Año, Región y producción de energía eléctrica. Además de evaluar la posición de Chile en este escenario global.
 
 # Métodos
 
@@ -65,13 +65,22 @@ population <- population %>%
 energy_pop <- full_join(population, energy) %>% drop_na(c(population, unit))
 ```
 
+Con el fin de analizar los aspectos de la producción energética Chilena, regional y global arriba descritos se extrajo del cuestionario anual de estadísticas sobre energía de la división de estadísticas de las naciones unidas aquellas entradas referentes a la producción energética, con particular foco en la producción bruta de energía y la cantidad de energía producida para los distintos métodos de producción.
 
-Se procedió a unir los datos de tamaños poblacionales con aquellos de producción de energía poniendo énfasis en la producción bruta de energía y los métodos de producción asociados.
+Esto resultó en una base de datos que contiene `r prettyNum(dim(energy)[1], big.mark =",")` observaciones para `r dim(energy)[2]` variables, presentando las cantidades de energía eléctrica producida por país, año y método, considerandose para este último  las producciones Geotérmica, Hidroeléctrica, Nuclear, Solar,  Termoeléctrica, Mareal y Eólica, además de la producción total bruta.
+Estos datos fueron complementados con los tamaños poblacionales de cada país entre `r energy$year %>% min()`-`r energy$year %>% max()` extraídos de los datos compilados por el departamento de censo de los estados unidos.
+La base de datos resultante contiene `r prettyNum(dim(energy_pop[1]), big.mark = ",")` observaciones de `r energy_pop$Country %>% unique() %>% length()` países distribuidos en `r energy_pop$Region %>% unique() %>% length()` regiones (África, Asia , Norte América, Europa, Oceanía y Latinoamérica y el Caribe) para el periodo de años considerado.
 
-Esto resultó en una base de datos que contiene `r dim(energy_pop)[1]` observaciones para `r dim(energy_pop)[2]` variables, colectando información sobre la producción bruta de electricidad y las cantidades de energía producida para los distintos métodos de producción de esta (Geotérmica, Hidroeléctrica, Nuclear, Solar,  Termoeléctrica, Mareal y Eólica) para `r energy_pop$Country %>% unique() %>% length()` países distribuidos en `r energy_pop$Region %>% unique() %>% length()` regiones (África, Asia , Norte América, Europa, Oceanía y Latinoamérica y el Caribe)
+Esta base de datos fue utilizada para explorar las relaciones entre tamaño poblacional-producción energética, Región-producción energética y Año-producción energética primero mediante gráficos exploratorios y, posteriormente mediante modelos de regresión que consideran, no solo estas variables de forma aislada, sino también sus combinaciones lineales e interacciones.
 
-Posteriormente esta base de datos fue analizada mediante gráficos y modelos con el fin de comparar los patrones de producción de energía eléctrica de Chile con Latinoamérica y el resto del mundo.
+Adicionalmente se evaluó la composición porcentual de la matriz de producción energética de Chile y se comparó con el resto del mundo.
 
+# Resultados
+
+Al evaluar la relación entre las variables Tamaño poblacional, Año y Región con la producción energética (Fig \@ref(fig:EpopYear)) se observa un efecto tanto de los tamaños pobacionales como del Año, no obstante las tenedencias observadas son, generalmente, regionales. Es decir, diferentes regiones parecen responder de distinto modo a los cambios en tamaños poblacionales y el paso del tiempo.
+
+Es así que se pueden observar una mayor producción energética especifica de América del Norte, seguida por Asia. Por el contrario se puede observar que África presenta menor producción energética que Europa aún cuando tiene mayor población.
+Curiosamente se puede observar que la producción energética tanto África como Oceanía se ha mantenido prácticamente constante entre 1990 y 2014 y que Europa incluso la ha disminuido. Esto es contrario a la tendencia observada para América del Norte, Asia y Latinoamérica y el Caribe donde esta última región a presentado el menor incremento en producción energética.
 
 ```{r}
 mean_epop<- energy_pop %>% 
@@ -80,10 +89,7 @@ mean_epop<- energy_pop %>%
   pivot_longer(c(year, population), names_to = "yearPop", values_to = "val")
 ```
 
-# Resultados
-
-
-```{r EpopYear, fig.cap= "**Promedio de energía total producida para cada región por año y tamaño de población**", fig.align="center", fig.width=10}
+```{r EpopYear, fig.cap= "Promedio de energía total producida para cada región por año y tamaño de población", fig.align="center", fig.width=10}
 ggplot(mean_epop, aes(x = val, y = Gross_EP)) +
   facet_wrap(~yearPop, ncol = 2, scales = "free_x") +
   geom_point(aes(color = Region), alpha = 0.8) +
@@ -92,47 +98,6 @@ ggplot(mean_epop, aes(x = val, y = Gross_EP)) +
   theme_bw()
 
 ```
-
-```{r}
-EP2014 <- energy_pop %>% 
-  dplyr::filter(year == 2014)
-
-C_EP2014 <-EP2014 %>% 
-  dplyr::filter(Country == "Chile") %>% 
-  select(!Country:unit) %>% 
-  mutate(Region = "Chile")
-
-G_EP2014 <- EP2014 %>% 
-  select(!Country:unit) %>%
-  mutate(Region = "Global") %>%
-  group_by(Region) %>% 
-  summarize_if(is.numeric, ~sum(.x, na.rm = T))
-
-R_EP2014 <- EP2014 %>% 
-  select(!Country:unit) %>% 
-  group_by(Region) %>% 
-  summarize_if(is.numeric, ~sum(.x, na.rm = T)) %>% 
-  add_row(C_EP2014, .before = 1) %>% 
-  add_row(G_EP2014) %>% 
-  select(!net_EP) %>% 
-  mutate(across(!Region, ~round((.x/Gross_EP)*100, 2)))
-```
-
-Adicionalmente se exploró la contribución porcentual de los distintos modos de generación eléctrica a la producción bruta de Chile, comparándose esta con la composición global y regional
-
-
-```{r Ematrix}
-kable(R_EP2014, caption = "Contribución porcentual de los distintos metodos de generación de energía a la producción Bruta para el año 2014") %>% 
-  kable_styling(bootstrap_options = c("condensed","striped", "hoover"), latex_options = "scale_down", full_width = F, font_size = 18, position = "left") %>% row_spec(row = 1, bold = T)
-```
-
-Finalmente, dado que se observaron efectos de la región, tamaño poblacional y año sobre la producción bruta de energía eléctrica se probaron los siguientes modelos:
-
-* Producción Bruta en función de Año, tamaño poblacional y Región individualmente
-* Producción Bruta en función de combinaciones aditivas de estos factores
-* Producción Bruta en función de Interacción de estos factores
-
-Obteniéndose los siguientes resultados
 
 ```{r}
 ## Comparación de modelos
@@ -166,14 +131,64 @@ Modelo11 <- glance(Fit11) %>% dplyr::select(r.squared, AIC) %>% mutate(Modelo = 
 
 Modelos <- bind_rows(Modelo01,Modelo02,Modelo03,Modelo04,Modelo05,Modelo06,Modelo07, Modelo08, Modelo09, Modelo10, Modelo11) %>% 
   arrange(AIC) %>% mutate(Delta_AIC = AIC - min(AIC)) %>% 
-  relocate(Modelo, .before = r.squared)
+  relocate(Modelo, .before = r.squared) %>% 
+  mutate(across(!Modelo, ~round(.x, 4))) %>% 
+  mutate(across(!Modelo, ~format(.x, big.mark = ",")))
 
 ```
+
+
+Con el fin de explorar estas relaciones de forma explicita se procedió a generar 11 modelos de regresión de la producción energética bruta en función del tamaño poblacional, Año y Región, estos modelos exploran la relación de estos factores de forma individual, aditiva y de su interacción. Los modelos resultantes fueron comparados mediante el criterio de información de Akaike, los resultados obtenidos pueden observarse en la Tabla \@ref(tab:ModelTab).
+En esta se puede ver que la interacción entre los factores considerados es la que mejor puede explicar la producción bruta de energía ($R^2$ = `r max(Modelos$r.squared)`). Indicando esto que la interacción entre los 3 factores considerados esta relacionada con la producción de energía.
 
 ```{r ModelTab}
-kable(Modelos) %>% kable_styling(bootstrap_options = c("condensed", "striped", "hoover"))
+kable(Modelos, caption = "Modelos de regresión para la producción bruta de energía en función de Tamaño Poblacional, Año y Región", booktabs = T) %>% kable_styling(latex_options = c("striped", "HOLD_position"))
 ```
 
+Finalmente se procedió a evaluar la composición de las matrices de generación electrica presentes en la base de datos. Para esto se estimó la contribución porcentual de los distintos modos de generación eléctrica a la producción bruta, evaluándose estas contribuciones para Chile, las distintas regiones consideradas y el mundo. Los resultados obtenidos para el año 2014 se presentan en la Tabla \@ref(tab:Ematrix2014).
+
+```{r}
+EP2014 <- energy_pop %>% 
+  dplyr::filter(year == 2014)
+
+C_EP2014 <-EP2014 %>% 
+  dplyr::filter(Country == "Chile") %>% 
+  select(!Country:unit) %>% 
+  mutate(Region = "Chile")
+
+G_EP2014 <- EP2014 %>% 
+  select(!Country:unit) %>%
+  mutate(Region = "Global") %>%
+  group_by(Region) %>% 
+  summarize_if(is.numeric, ~sum(.x, na.rm = T))
+
+R_EP2014 <- EP2014 %>% 
+  select(!Country:unit) %>% 
+  group_by(Region) %>% 
+  summarize_if(is.numeric, ~sum(.x, na.rm = T)) %>% 
+  add_row(C_EP2014, .before = 1) %>% 
+  add_row(G_EP2014) %>% 
+  select(!net_EP) %>% 
+  mutate(across(!Region, ~round((.x/Gross_EP)*100, 2)))
+```
+
+
+```{r Ematrix2014}
+kable(R_EP2014, caption = "Contribución porcentual de los distintos metodos de generación de energía a la producción Bruta para el año 2014", booktabs = T) %>% 
+  kable_styling(latex_options = c("scale_down", "striped", "HOLD_position"), full_width = F, font_size = 18, position = "left") %>% row_spec(row = 1, bold = T)
+```
+
+En esta tabla se puede observar que en términos generales la mayor producción de energía se realiza mediante plantas Termoeléctricas, siendo este ítem el mayor contribuyente a escala global y regional, no obstante hay diferencias regionales considerables. Es así que se puede observar que tanto Europa como América del Norte presentan una mayor contribución de energía nuclear, mientras que Latinoamérica y el Caribe presentan una matriz de producción Hidroeléctrica considerable.
+
+Respecto a este escenario se puede observar que Chile se asemeja al patrón de producción de energía observado para Latinoamérica y el Caribe, pero con una mayor producción Termoeléctrica y menor producción Hidroeléctrica cuando se le compara con esta región.
+
 # Conclusiones
+
+En base a los resultados aquí presentados se puede observar que existe una tendencia general a que la producción energética aumente con los tamaños poblacionales y el paso de los Años. Si bien esto podría indicar que el uso de medidas normalizadas como la producción energética per-capita serían preferibles para considerar los efectos independientes de la población, los resultados obtenidos indican que su uso debe ser cauteloso puesto que las distintas regiones del planeta presentan diferentes modos de respuesta a los cambios en población (Fig. \@ref(fig:EpopYear)), siendo esto corroborado al encontrar que los modelos que consideran la interacción entre Región y Población explican mejor la producción neta de energía cuando se compara con aquellos que consideran población como un factor aditivo (Tab. \@ref(tab:ModelTab)). Es por esto que se recomienda cautela al momento de utilizar estas aproximaciones al realizar comparaciones interegionales.
+
+Adicionalmente, al explorar las contribuciones porcentuales de los distintos métodos de producción energética, se pudo observar que si bien al año 2014 la mayor producción seguía siendo Termoeléctrica, hay patrones de producción regionales. Es así que se observó que Latinoamérica y el Caribe depende considerablemente de la producción Hidroeléctrica, lo cual identifica una posible crisis energética en el escenario de cambio climático. 
+Por otra parte, los datos recopilados en la Tabla \@ref(tab:Ematrix2014) muestran que Europa y América del Norte presentan las mayores contribuciones de energías renovables no hidroeléctricas, lo cual puede ser explicado por que estas son regiones ricas con la capacidad de inversión necesaria para el desarrollo de estas tecnologías, siendo esto coherente con lo presentado en [@brunnschweiler2010finance].
+
+Finalmente se puede observar que Chile presenta un patrón de producción de energía similar al esperado para su región, pero con mayor contribución Termoeléctrica y menor contribución Hidroeléctrica, lo cual podía ser un indicador de las débiles politicas ambientales del pais.
 
 # Bibliografía
